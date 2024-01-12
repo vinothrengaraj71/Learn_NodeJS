@@ -32,7 +32,10 @@ const server = http.createServer((req,res) => {
             res.end(data);
         })
         
-    }else {
+    } else if (pathName === '/overview'){
+        res.end("Root page or Overview page");
+    }
+    else {
         res.end("Page Not Found");
     }
     //res.end("Hello Vinoth I am Node Web Server !!!");
