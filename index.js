@@ -19,31 +19,31 @@ const http = require('http');
 //     })
 // })
 
-const server = http.createServer((req,res) => {
-    const pathName = req.url;
-    console.log(pathName);
+// const server = http.createServer((req,res) => {
+//     const pathName = req.url;
+//     console.log(pathName);
     
-    if (pathName === '/') {
-        res.end("Root page or Home page");
-    } else if(pathName === '/api'){
-        fs.readFile(`${__dirname}/data/data.json`,"utf-8",(err,data) =>{
-            const productData = JSON.parse(data);
-            res.writeHead(200,{'content-type':'application/json'});
-            res.end(data);
-        })
+//     if (pathName === '/') {
+//         res.end("Root page or Home page");
+//     } else if(pathName === '/api'){
+//         fs.readFile(`${__dirname}/data/data.json`,"utf-8",(err,data) =>{
+//             const productData = JSON.parse(data);
+//             res.writeHead(200,{'content-type':'application/json'});
+//             res.end(data);
+//         })
         
-    } else if (pathName === '/overview'){
-        res.end("Root page or Overview page");
-    }
-    else {
-        res.end("Page Not Found");
-    }
-    //res.end("Hello Vinoth I am Node Web Server !!!");
-});
+//     } else if (pathName === '/overview'){
+//         res.end("Root page or Overview page");
+//     }
+//     else {
+//         res.end("Page Not Found");
+//     }
+//     //res.end("Hello Vinoth I am Node Web Server !!!");
+// });
 
-server.listen(8600, '127.0.0.1',()=> {
-    console.log("Listing to the server Port is 8500");
-});
+// server.listen(8600, '127.0.0.1',()=> {
+//     console.log("Listing to the server Port is 8500");
+// });
 
 
 
