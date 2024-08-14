@@ -1,0 +1,20 @@
+<h1>Login</h1>
+
+<% if(typeof message !=='undefined' ){ %>
+    <p style="color:red;">
+        <%= message %>
+    </p>
+    <% } %>
+
+        <form action="" method="POST">
+
+            <input type="email" placeholder="Enter Your Email" name="email" required>
+            <br><br>
+
+            <input type="password" placeholder="Enter Your Password" name="password" requird>
+            <br><br>
+
+            <input type="submit" value="Login">
+
+
+        </form>
