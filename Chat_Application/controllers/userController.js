@@ -31,10 +31,13 @@ module.exports = {
       }
 
       res.render('register', {
-        messge: 'Your Registration has been Complete!',
+        message: 'Your Registration has been Complete!',
       });
     } catch (error) {
       console.log(error);
+      res.status(500).render('register', {
+        message: 'An error occurred during registration.',
+      });
     }
   },
 
@@ -48,36 +51,41 @@ module.exports = {
 
   login: async (req, res) => {
     try {
+      const email = req.body.email;
+      const password = req.body.password;
 
-        const email = req.body.email;
-        const password = req.body.password;
-        
-        const userData = await User.findOne({
-            email:email
-        });
+      const userData = await User.findOne({ email: email });
 
-        if(userData){
-            const passwordMatch = bcrypt.compare(password,userData.password);
-            if(passwordMatch){
-                req.session.user = userData;
-                res.redirect('/dashboard');
-                return;
-            }
+      if (userData) {
+        const passwordMatch = await bcrypt.compare(password, userData.password);
+        if (passwordMatch) {
+          req.session.user = userData;
+          res.redirect('/dashboard');
+          return;
+        } else {
+          res.render('login', { message: 'Email and Password are incorrect!' });
         }
-        else{
-            console.render('login',{message:'Email and Password is Incorrect!'});
-        }
-
+      } else {
+        res.render('login', { message: 'Email and Password are incorrect!' });
+      }
     } catch (error) {
       console.log(error.message);
+      res.render('login', {
+        message: 'An error occurred. Please try again later.',
+      });
     }
   },
 
   logout: async (req, res) => {
     try {
-
-        req.session.destroy();
-        res.redirect('/');
+      req.session.destroy((err) => {
+        if (err) {
+          console.log(err.message);
+          res.redirect('/dashboard');
+        } else {
+          res.redirect('/');
+        }
+      });
     } catch (error) {
       console.log(error.message);
     }
@@ -85,7 +93,9 @@ module.exports = {
 
   dashboard: async (req, res) => {
     try {
-        res.render('dashboard',{user:req.session.user});
+
+     var users = await User.find({_id:{$nin:[req.session.user._id]}});
+      res.render('dashboard', { user: req.session.user, users:users });
     } catch (error) {
       console.log(error.message);
     }

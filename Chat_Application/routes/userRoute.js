@@ -1,4 +1,5 @@
 const express = require('express');
+require('dotenv').config();
 const user_route = express();
 const {
   register,
@@ -11,6 +12,11 @@ const {
 const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
+const session = require('express-session');
+
+const SECRET = process.env.SECRET;
+
+user_route.use(session({ secret: SECRET }));
 
 user_route.use(bodyParser.json());
 user_route.use(bodyParser.urlencoded({ extended: true }));
