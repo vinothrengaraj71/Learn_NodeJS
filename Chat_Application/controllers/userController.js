@@ -94,26 +94,27 @@ module.exports = {
 
   dashboard: async (req, res) => {
     try {
-
-     var users = await User.find({_id:{$nin:[req.session.user._id]}});
-      res.render('dashboard', { user: req.session.user, users:users });
+      var users = await User.find({ _id: { $nin: [req.session.user._id] } });
+      res.render('dashboard', { user: req.session.user, users: users });
     } catch (error) {
       console.log(error.message);
     }
   },
 
-  saveChat: async (req,res)=>{
+  saveChat: async (req, res) => {
     try {
         var chat = new Chat({
-        sender_id: req.body.sender_id,
-        receiver_id: req.body.receiver_id,
-        message: req.body.message,
-      });
+            sender_id: req.body.sender_id,
+            receiver_id: req.body.receiver_id,
+            message: req.body.message,
+        });
 
-      var newChat = await chat.save();
-      res.status(200).send({succes:true,msg:'Chat Inserted!',data:newChat});
-    }    catch (error) {
-      console.log(error);
+        var newChat = await chat.save();
+        res.status(200).send({ success: true, msg: 'Chat Inserted!', data: newChat });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ success: false, msg: 'Error inserting chat!' });
     }
-  },
-}
+},
+
+};

@@ -1,118 +1,163 @@
 <%- include('layouts/header.ejs') %>
 
-<h2 class="mb-4">Hi, <%= user.name %></h2>
-<div class="row">
-  <div class="col-ms-3">
-    <ul class="list-group">
-      <% if(users.length > 0){ %>
-        <% for(let i = 0; i < users.length; i++){ %>
-          <li class="list-group-item list-group-item-dark cursor-pointer user-list data-id="<%= users[i]['_id'] %>">
-            <img
-              src="<%= 'http://127.0.0.1:3001/'+users[i]['image'] %>"
-              alt=""
-              width="50px"
-              height="50px"
-            />
-            <%= users[i]['name'] %>
-            <% if(users[i]['is_online'] == 1){ %>
-              <sup class="online-status" id="<%= users[i]['_id'] %>-status">Online</sup>
-            <% } else { %>
-              <sup class="offline-status" id="<%= users[i]['_id'] %>-status">Offline</sup>
+  <h2 class="mb-4">Hi, <%= user.name %>
+  </h2>
+  <div class="row">
+    <div class="col-ms-3">
+      <ul class="list-group">
+        <% if(users.length> 0){ %>
+          <% for(let i=0; i < users.length; i++){ %>
+            <li class="list-group-item list-group-item-dark cursor-pointer user-list data-id=" <%=users[i]['_id'] %>">
+              <img src="<%= 'http://127.0.0.1:3001/'+users[i]['image'] %>" alt="" width="50px" height="50px" />
+              <%= users[i]['name'] %>
+                <% if(users[i]['is_online']==1){ %>
+                  <sup class="online-status" id="<%= users[i]['_id'] %>-status">Online</sup>
+                  <% } else { %>
+                    <sup class="offline-status" id="<%= users[i]['_id'] %>-status">Offline</sup>
+                    <% } %>
+            </li>
             <% } %>
-          </li>
-        <% } %>
-      <% } %>
-    </ul>
-  </div>
-  <div class="col-md-9">
-    <h3 class="start-head">Click to start chat</h3>
-    <div class="chat-section">
-      <div id="chat-container">
-        
-      </div>
+              <% } %>
+      </ul>
+    </div>
+    <div class="col-md-9">
+      <h3 class="start-head">Click to start chat</h3>
+      <div class="chat-section">
+        <div id="chat-container">
 
-      <form action="" id="chat-form">
-        <input
-          type="text"
-          id="message"
-          placeholder="Type a message..."
-          class="border"
-          required
-        />
-        <button type="submit" class="btn btn-primary">Send</button>
-      </form>
+        </div>
+
+        <form action="" id="chat-form">
+          <input type="text" id="message" placeholder="Type a message..." class="border" required />
+          <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  var sender_id = '<%= user._id %>';
-  var receiver_id;
-  var socket = io('/user-namespace', {
-    auth: {
-      token: '<%= user._id %>',
-    },
-  });
-
-  $(document).ready(function () {
-    $('.user-list').click(function () {
-
-      var UserId = $(this).attr('data-id');
-      receiver_id = UserId;
-
-      $('.start-head').hide();
-      $('.chat-section').show();
+  <script>
+    var sender_id = '<%= user._id %>';
+    var receiver_id;
+    var socket = io('/user-namespace', {
+      auth: {
+        token: '<%= user._id %>',
+      },
     });
+
+    $(document).ready(function () {
+      $('.user-list').click(function () {
+
+        var userId = $(this).attr('data-id');
+        receiver_id = userId;
+
+        $('.start-head').hide();
+        $('.chat-section').show();
+        $('#chat-container').empty();
+
+        socket.emit('existsChats',{sender_id:sender_id,receiver_id:receiver_id});
+      });
+    });
+
+    //Update User Online status
+    socket.on('getOnlineUser', (data) => {
+      $('#' + data.user_id + '-status').text('Online')
+      $('#' + data.user_id + '-status').removeClass('offline-status')
+      $('#' + data.user_id + '-status').addClass('online-status')
+    })
+
+    //Update User Offline status
+    socket.on('getOfflineUser', (data) => {
+      $('#' + data.user_id + '-status').text('Offline')
+      $('#' + data.user_id + '-status').removeClass('online-status')
+      $('#' + data.user_id + '-status').addClass('offline-status')
+    })
+
+    //chat save of user
+    $('#chat-form').submit(function (event) {
+      event.preventDefault();
+
+      var message = $('#message').val();
+
+      $.ajax({
+        url: '/save-chat',
+        type: 'POST',
+        data: { sender_id: sender_id, receiver_id: receiver_id, message: message },
+        success: function (response) {
+          console.log('Server Response:', response);
+          if (response.success) {
+            console.log('Message Data:', response.data.message);
+            $('#message').val('');
+            let chat = response.data.message;
+            let html = `
+      <div class="current-user-chat">
+        <h5>`+ chat + `</h5>
+      </div>
+      `;
+            $('#chat-container').append(html);
+            socket.emit('newChat', response.data);
+          } else {
+            console.error('Error:', response.msg);
+            alert(response.msg);
+          }
+        }
+      });
+
+    //   socket.on('loadNewChat', function (data) {
+    //     if (sender_id == data.receiver_id && receiver_id == data.sender_id) {
+    //       let html = `
+    //     <div class="distance-user-chat"> 
+    //       <h5>`+ data.message + `</h5>
+    //       </div>
+    //     `;
+    //       $('#chat-container').append(html);
+    //     }
+    //   });
+    })
+
+
+  // Listen for new chat messages
+  socket.on('loadNewChat', function (data) {
+    // Display chat message based on receiver_id and sender_id
+    if (receiver_id === data.sender_id || receiver_id === data.receiver_id) {
+      let chatHtml;
+      if (data.sender_id === sender_id) {
+        chatHtml = `
+          <div class="current-user-chat"> 
+            <h5>` + data.message + `</h5>
+          </div>`;
+      } else {
+        chatHtml = `
+          <div class="distance-user-chat"> 
+            <h5>` + data.message + `</h5>
+          </div>`;
+      }
+      $('#chat-container').append(chatHtml);
+    }
   });
 
-  //Update User Online status
-  socket.on('getOnlineUser',(data)=>{
-    $('#'+data.user_id+'-status').text('Online')
-    $('#'+data.user_id+'-status').removeClass('offline-status')
-    $('#'+data.user_id+'-status').addClass('online-status')
-  })
+  socket.on('loadChats',(data)=>{
+    $('#chat-container').html('');
 
-  //Update User Offline status
-  socket.on('getOfflineUser',(data)=>{
-    $('#'+data.user_id+'-status').text('Offline')
-    $('#'+data.user_id+'-status').removeClass('online-status')
-    $('#'+data.user_id+'-status').addClass('offline-status')
-  })
+    var chats = data.chats;
 
-  //chat save of user
-  $('#chat-form').submit(function(event){
-    event.preventDefault(); 
+    let html='';
 
-    var message = $('#message').val();
-    // var data = {
-    //   sender_id: sender_id,
-    //   receiver_id: receiver_id,
-    //   message: message
-    // }
-
-    $.ajax({
-      url:'/save-chat',
-      type:'POST',
-      data:{sender_id:sender_id,receiver_id:receiver_id,message:message},\
-      success:function(data){
-        if(data.success){
-          $('#message').val();
-          let chat = data.message;
-          let html: `
-          <div class="current-user-chat">
-          <h5>Hi</h5>
-        </div>
-
-        <div class="distance-user-chat">
-          <h5>Hi</h5>
-        </div>
-          `;
+    for(let x=0;x<chats.length;x++){
+        let addClass = '';
+        if(chats[x]['sender_id']== sender_id){
+          addClass='current-user-chat';
         }else{
-          alert(data.msg);
+          addClass='distance-user-chat';
         }
-      }
-    })
-  })
-</script>
 
-<%- include('layouts/footer.ejs') %>
+        html +=`
+          <div class='`+addClass`'> 
+            <h5>` + chats[x]['message'] + `</h5>
+          </div>;
+        `;
+    }
+    $('#chat-container').append(html);
+  });
+  </script>
+
+  <%- include('layouts/footer.ejs') %>
