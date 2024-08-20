@@ -23,8 +23,10 @@ usp.on('connection', async (socket) => {
 
   try {
     await User.findByIdAndUpdate({ _id: userId }, { $set: { is_online: '1' } });
+    //broadcasting User Online
+    socket.broadcast.emit('getOnlineUser',{ user_id:userId});
     console.log(`User ${userId} is now online.`);
-  } catch (error) {
+  } catch (error) { 
     console.error('Error updating user status:', error);
   }
 
@@ -32,6 +34,10 @@ usp.on('connection', async (socket) => {
     console.log('User disconnected from the user namespace');
     try {
       await User.findByIdAndUpdate({ _id: userId }, { $set: { is_online: '0' } });
+
+
+      //broadcasting User Online
+      socket.broadcast.emit('getOfflineUser',{ user_id:userId});
       console.log(`User ${userId} is now offline.`);
     } catch (error) {
       console.error('Error updating user status on disconnect:', error);

@@ -8,11 +8,13 @@ const {
   loginLoad,
   logout,
   dashboard,
+  saveChat
 } = require('../controllers/userController');
 const bodyParser = require('body-parser');
 const path = require('path');
 const multer = require('multer');
 const session = require('express-session');
+const userController = require('../controllers/userController');
 
 const SECRET = process.env.SECRET;
 
@@ -42,6 +44,7 @@ user_route.get('/', loginLoad);
 user_route.post('/', login);
 user_route.get('/logout', logout);
 user_route.get('/dashboard', dashboard);
+user_route.post('/save-chat',saveChat);
 user_route.get('/*', (req, res) => {
   res.redirect('/');
 });
